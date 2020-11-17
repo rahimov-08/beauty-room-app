@@ -8,6 +8,7 @@ const routes = [
   {
     path: '/',
     name: 'Home',
+    meta: {layout: 'main'},
     component: Home
   },
   {
@@ -21,11 +22,21 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
+    meta: {layout: 'empty'},
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/Login.vue')
-  }
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    meta: {layout: 'main'},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Users.vue')
+  },
 ]
 
 const router = new VueRouter({
