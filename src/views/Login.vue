@@ -8,10 +8,10 @@
                     <v-form ref="loginForm" v-model="valid" lazy-validation>
                         <v-row>
                             <v-col cols="12">
-                                <v-text-field v-model="loginUsername" :rules="[rules.required, rules.min]" label="Имя пользователя" required></v-text-field>
+                                <v-text-field v-model="email" :rules="[rules.required, rules.min]" label="Имя пользователя" required></v-text-field>
                             </v-col>
                             <v-col cols="12">
-                                <v-text-field v-model="loginPassword" :append-icon="show1?'eye':'eye-off'" :rules="[rules.required, rules.min]" :type="show1 ? 'text' : 'password'" name="input-10-1" label="Пароль" @click:append="show1 = !show1"></v-text-field>
+                                <v-text-field v-model="password" :append-icon="show1?'eye':'eye-off'" :rules="[rules.required, rules.min]" :type="show1 ? 'text' : 'password'" name="input-10-1" label="Пароль" @click:append="show1 = !show1"></v-text-field>
                              </v-col>
                             <v-col class="d-flex" cols="12" sm="6" xsm="12">
                             </v-col>
@@ -31,10 +31,19 @@
 export default {
 
   methods: {
-    validate() {
-      if (this.$refs.loginForm.validate()) {
-        // submit form to server/API here...
-      }
+    async validate() {
+        const formData = {
+          email: this.email,
+          password: this.password
+        }
+
+        try{
+          await this.$store.dispatch('login',formData)
+          this.$router.push('/')
+        }catch(e){
+          console.log('');
+        }
+      
     },
     reset() {
       this.$refs.form.reset();
@@ -47,8 +56,8 @@ export default {
     dialog: true,
     valid: true,
     
-    loginPassword: "",
-    loginUsername: "",
+    password: "",
+    email: "",
 
     show1: false,
     rules: {

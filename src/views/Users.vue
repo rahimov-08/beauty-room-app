@@ -35,13 +35,14 @@
               class="mb-2"
               v-bind="attrs"
               v-on="on"
+              v-on:click="addingNewItem()"
             >
               Добавить
             </v-btn>
           </template>
           <v-card>
             <v-card-title>
-              Добавление/редактирование пользователя
+              {{formTitle}}
             </v-card-title>
 
             <v-card-text>
@@ -73,6 +74,14 @@
                     </v-col>
                 </v-row>
                 <v-row>
+                    <v-col cols="12">
+                        <v-text-field
+                            v-model="editedItem.email"
+                            label="E-mail"
+                            :rules="rules.email"/>
+                    </v-col>
+                </v-row>
+                <v-row>
                     <v-col cols="8">
                         <v-text-field
                         v-model="editedItem.phone"
@@ -83,6 +92,14 @@
                         <v-text-field
                         v-model="editedItem.working_hours"
                         label='Кол-во раб. ч/мес.'/>
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col cols="12" v-if="adding">
+                        <v-text-field
+                        :disabled="adding"
+                        v-model="editedItem.password"
+                        label='Пароль'/>
                     </v-col>
                 </v-row>
               </v-container>
@@ -152,24 +169,29 @@
     data () {
       return {
         dialog:false,
+        adding: false,
         positions: ['Менеджер','Заведующий складом','Консультант'],
         dialogDelete: false,
+        generatedPassword: '',
         defaultUser: {
             name: '',
             position: '',
             phone: '',
+            email: '',
             address: '',
-            working_hours: 0
+            working_hours: 0,
         },
         editedItem: {
             name: '',
             position: '',
-            phone: '',
+            phone: '+7',
+            email: '',
             address: '',
-            working_hours: 0
+            working_hours: 0,
         },
         search:'',
         rules: {
+          email: [val => val.match(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/) || 'Некорректный адрес!'],
           required: [val => (val || '').length > 0 || 'Объязательное поле!'],
           phone: [val => val.match(/\d/g).length == 11 || 'Неверный номер телефона']
         },
@@ -181,6 +203,7 @@
           },
           { text: 'Должность', value: 'position' },
           { text: 'Телефон', value: 'phone', sortable:false },
+          { text: 'E-mail', value: 'email', sortable:false },
           { text: 'Адрес', value: 'address', sortable:false },
           { text: 'Кол-во раб. часов/мес', value: 'working_hours', align: 'center' },
           { text: 'Действие', value: 'actions', sortable: false, align: 'end' },
@@ -190,7 +213,7 @@
     },
     computed: {
       formTitle () {
-        return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+        return this.adding ? 'Создание пользователя' : 'Редактирование пользователя'
       },
     },
 
@@ -213,52 +236,70 @@
             name: 'Сысоев Игнатий Александрович',
             position: 'Менеджер',
             phone: '7(967)150-23-48',
+            email: 'name@mail.ru',
             address: 'Москва',
-            working_hours: '10'
+            working_hours: '10',
           },
           {
             name: 'Федосеев Корней Федорович',
             position: 'Заведующий складом',
             phone: '7(132)692-82-35',
             address: 'Москва',
-            working_hours: '10'
+            working_hours: '10',
+            username: '',
+            password: '',
           },
           {
             name: 'Тихонов Мстислав Арсеньевич',
             position: 'Заведующий складом',
             phone: '7(174)606-31-38',
             address: 'Москва',
-            working_hours: '10'
+            working_hours: '10',
+            username: '',
+            password: '',
           },
           {
             name: 'Рогов Кассиан Рубенович',
             position: 'Консультант',
             phone: '7(923)700-58-69',
             address: 'Москва',
-            working_hours: '10'
+            working_hours: '10',
+            username: '',
+            password: '',
           },
           {
             name: 'Симонова Джулия Геласьевна',
             position: 'Менеджер',
             phone: '7(688)657-08-46',
             address: 'Москва',
-            working_hours: '10'
+            working_hours: '10',
+            username: '',
+            password: '',
           },
           {
             name: 'Голубева Лидия Дмитриевна',
             position: 'Консультант',
             phone: '7(607)328-50-54',
             address: 'Москва',
-            working_hours: '10'
+            working_hours: '10',
+            username: '',
+            password: '',
           },
                 
             ]
         },
-        editItem (item) {
+        async addingNewItem(){
+            this.adding = true
+            await this.axios.get("https://helloacm.com/api/random/?n=8").then((response) =>this.generatedPassword = response.data);
+            this.editedItem.password = this.generatedPassword
+            
+          },
+        async editItem (item) {
         this.editedIndex = this.users.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
       },
+
 
       deleteItem (item) {
         this.editedIndex = this.users.indexOf(item)
@@ -277,6 +318,9 @@
           this.editedItem = Object.assign({}, this.defaultItem)
           this.editedIndex = -1
         })
+        if(this.adding){
+          this.adding = false
+        }
       },
 
       closeDelete () {
@@ -287,13 +331,21 @@
         })
       },
 
-      save () {
-        if (this.editedIndex > -1) {
+      async save () {
+        
+        try{
+          if (this.editedIndex > -1) {
           Object.assign(this.users[this.editedIndex], this.editedItem)
-        } else {
-          this.users.push(this.editedItem)
+          } else {
+            this.users.push(this.editedItem)
+            console.log(this.editedItem);
+            await this.$store.dispatch('register',this.editedItem)
+          }
+          this.close()
+        }catch(e){
+          console.log(e);
         }
-        this.close()
+        
       },
     }
   }
