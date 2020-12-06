@@ -9,7 +9,7 @@
   <v-data-table
      v-else
     :headers="headers"
-    :items="users"
+    :items="ordProd"
     :search="search"
     class="elevation-1"
   >
@@ -17,7 +17,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title><h3>Пользователи</h3></v-toolbar-title>
+        <v-toolbar-title> <h3>Заказ клиента "{{order.customer}}" от {{order.date}}</h3></v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -31,6 +31,7 @@
                 hide-details/>
                 <v-spacer></v-spacer>
         <v-dialog
+          v-if="userPosition === 'Консультант'"
           v-model="dialog"
           max-width="500px"
         >
@@ -54,64 +55,24 @@
             <v-card-text>
               <v-container>
                 <v-row>
-                    <v-col cols="12">
-                        <v-text-field
-                        v-model="editedItem.name"
-                        label='ФИО'
-                        :rules="rules.required"/>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="12">
-                        <v-autocomplete
-                            v-model="editedItem.position"
-                            :items="positions"
-                            label="Должность"
-                            :rules="rules.required"/>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="12">
-                        <v-text-field
-                            v-model="editedItem.address"
-                            label="Адрес"
-                            :rules="rules.required"/>
-                            
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="12">
-                        <v-text-field
-                            :disabled="!adding"
-                            v-model="editedItem.email"
-                            label="E-mail"
-                            :rules="rules.email"/>
-                    </v-col>
-                </v-row>
-                <v-row>
                     <v-col cols="8">
-                        <v-text-field
-                        v-model="editedItem.phone"
-                        label='Номер телефона'
-                        :rules="rules.phone"/>
+                       <v-autocomplete
+                            v-model="editedItem.name"
+                            :items="products"
+                            item-text="name"
+                            label="Продукт"
+                        />
                     </v-col>
                     <v-col cols="4">
                         <v-text-field
-                        v-model="editedItem.working_hours"
-                        label='Кол-во раб. ч/мес.'/>
+                            v-model="editedItem.quantity"
+                            label='Количество'
+                            :rules="rules.required"/>
                     </v-col>
                 </v-row>
-                <v-row>
-                    <v-col cols="12" v-if="adding">
-                        <v-text-field
-                        :disabled="adding"
-                        v-model="editedItem.password"
-                        label='Пароль'/>
-                    </v-col>
-                </v-row>
+                
               </v-container>
             </v-card-text>
-
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn
@@ -146,6 +107,7 @@
     </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon
+      :disabled="userPosition != 'Консультант'"
         small
         class="mr-2"
         @click="editItem(item)"
@@ -153,7 +115,7 @@
         mdi-pencil
       </v-icon>
       <v-icon
-        :disabled="item.uid === uid"
+        :disabled="userPosition != 'Консультант'"
         small
         @click="deleteItem(item)"
       >
@@ -165,7 +127,7 @@
         color="primary"
         @click="initialize"
       >
-        Reset
+        Повторить
       </v-btn>
     </template>
   </v-data-table>
@@ -178,30 +140,27 @@
       return {
         dialog:false,
         uid:'',
+        rawsLoading:false,
         adding: false,
         loading: true,
         positions: ['Менеджер','Заведующий складом','Консультант'],
         dialogDelete: false,
         generatedPassword: '',
-        defaultUser: {
-            uid: '',
-            name: '',
-            position: '',
-            phone: '',
-            email: '',
-            address: '',
-            working_hours: 0,
+        defaultOrderProduct: {
+            name:'',
+            quantity:'',
+            price:0,
+            totalPrice:0,
         },
         editedItem: {
-            uid: '',
-            name: '',
-            position: '',
-            phone: '+7',
-            email: '',
-            address: '',
-            working_hours: 0,
+            name:'',
+            quantity:'',
+            price:0,
+            totalPrice:0,
         },
+         userPosition: null,
         search:'',
+        rawSearch:'',
         rules: {
           email: [val => val.match(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/) || 'Некорректный адрес!'],
           required: [val => (val || '').length > 0 || 'Объязательное поле!'],
@@ -209,23 +168,25 @@
         },
         headers: [
           {
-            text: 'ФИО',
+            text: 'Название',
             align: 'start',
             value: 'name',
           },
-          { text: 'Должность', value: 'position' },
-          { text: 'Телефон', value: 'phone', sortable:false },
-          { text: 'E-mail', value: 'email', sortable:false },
-          { text: 'Адрес', value: 'address', sortable:false },
-          { text: 'Кол-во раб. часов/мес', value: 'working_hours', align: 'center' },
+          { text: 'Количество', value: 'quantity' },
+          { text: 'Цена/шт.', value: 'price' },
+          { text: 'Сумма', value: 'totalPrice' },
           { text: 'Действие', value: 'actions', sortable: false, align: 'end' },
         ],
-        users: [],
+        products: [],
+        ordProd:[],
+        raws:[],
+        order: null,
+        orderUid:0,
       }
     },
     computed: {
       formTitle () {
-        return this.adding ? 'Создание пользователя' : 'Редактирование пользователя'
+        return this.adding ? 'Добавьте продукт к заказу' : 'Редактирование продукта'
       }
     },
 
@@ -239,35 +200,43 @@
     },
     async mounted(){
       this.uid = await this.$store.dispatch('getUid')
+      this.$store.dispatch('fetchInfo').then(val=>
+      this.userPosition = val)
+      this.orderUid = this.$route.params.uid
+        
       this.initialize()
     },
     methods:{
         async initialize(){
-            this.users = await this.$store.dispatch('fetchUsers')
+            this.products = await this.$store.dispatch('fetchProducts')
+            this.order = await this.$store.dispatch('fetchOrder',this.orderUid)
+            this.ordProd = await this.$store.dispatch('fetchOrderProducts',this.orderUid)
             this.loading = false
         },
         async addingNewItem(){
             this.adding = true
-            await this.axios.get("https://helloacm.com/api/random/?n=8").then((response) =>this.generatedPassword = response.data);
-            this.editedItem.password = this.generatedPassword
             
-          },
+        },
         async editItem (item) {
-        this.editedIndex = this.users.indexOf(item)
+        this.editedIndex = this.ordProd.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
       },
 
 
       deleteItem (item) {
-        this.editedIndex = this.users.indexOf(item)
+        this.editedIndex = this.ordProd.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialogDelete = true
       },
 
       async deleteItemConfirm () {
-        this.users.splice(this.editedIndex, 1)
-        this.$store.dispatch('deleteUser',this.editedItem.uid)
+        this.ordProd.splice(this.editedIndex, 1)
+        var formData ={
+          uid: this.orderUid,
+          compositionUid: this.editedItem.uid
+        }
+        this.$store.dispatch('deleteOrderProduct',formData)
         this.closeDelete()
       },
 
@@ -291,14 +260,37 @@
       },
 
       async save () {
-        
         try{
           if (this.editedIndex > -1) {
-            Object.assign(this.users[this.editedIndex], this.editedItem)
-            await this.$store.dispatch('updateUser',this.editedItem)
+            Object.assign(this.ordProd[this.editedIndex], this.editedItem)
+            let product = this.products[this.products.findIndex(it=>it.name === this.editedItem.name)]
+            let price = product.price * this.editedItem.quantity
+            this.editedItem.price = product.price
+            this.editedItem.totalPrice = price
+            let formData = {
+              uid: this.orderUid,
+              compositionUid: this.editedItem.uid,
+              name: this.editedItem.name,
+              quantity: this.editedItem.quantity,
+              price: this.editedItem.price,
+              totalPrice: this.editedItem.totalPrice,
+            }
+            console.log(this.editedItem);
+            await this.$store.dispatch('updateOrderProduct',formData)
           } else {
-            this.users.push(this.editedItem)
-            await this.$store.dispatch('register',this.editedItem)
+            console.log(this.ordProd);
+            if(this.ordProd.length === 0){
+              let formData = {orderUid: this.orderUid, status:'Обрабатывается'}
+              await this.$store.dispatch('updateOrderStatus',formData)
+            }
+            let product = this.products[this.products.findIndex(it=>it.name === this.editedItem.name)]
+            let price = product.price * this.editedItem.quantity
+            this.editedItem.price = product.price
+            this.editedItem.totalPrice = price
+            let formData = {orderUid:this.orderUid,composition:this.editedItem}
+            var compositionKey = await this.$store.dispatch('addProductToOrder',formData)
+            this.editedItem.uid = compositionKey
+            this.ordProd.push(this.editedItem)
           }
           this.close()
         }catch(e){

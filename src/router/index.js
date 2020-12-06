@@ -38,7 +38,107 @@ const routes = [
     // which is lazy-loaded when the route is visited.
     component: () => import(/* webpackChunkName: "about" */ '../views/Users.vue')
   },
+  {
+    path: '/suppliers',
+    name: 'Suppliers',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Suppliers.vue')
+  },
+  {
+    path: '/products',
+    name: 'Products',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Products.vue')
+  },
+  {
+    path: '/raws',
+    name: 'Raws',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Raws.vue')
+  },
+  {
+    path: '/tp-companies',
+    name: 'Transport companies',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/TpCompany.vue')
+  },
+  {
+    path: '/customers',
+    name: 'Customers',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Customers.vue')
+  },
+  {
+    path: '/orders',
+    name: 'Orders',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/Orders.vue')
+  },
+  {
+    path: '/order/:uid',
+    name: 'Order',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/SingleOrder.vue')
+  },
+  {
+    path: '/sales-invoice/',
+    name: 'Sales invoices',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/SalesInvoice.vue')
+  },
+  {
+    path: '/sales-invoice/:uid',
+    name: 'Sales invoice',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/SingleSalesInvoice.vue')
+  },
+  {
+    path: '/purchase-invoice',
+    name: 'Purchase invoice',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/PurchaseInvoice.vue')
+  },
+  {
+    path: '/bills',
+    name: 'Bills',
+    meta: {layout: 'main', auth: true},
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/bills.vue')
+  },
 ]
+
 
 
 const router = new VueRouter({
@@ -50,7 +150,6 @@ const router = new VueRouter({
 router.beforeEach((to,from,next)=>{
   const currentUser = firebase.auth().currentUser
   const requireAuth = to.matched.some(record => record.meta.auth)
-  console.log(to);
 
   if(requireAuth && !currentUser){
     next('/login')

@@ -9,7 +9,7 @@
   <v-data-table
      v-else
     :headers="headers"
-    :items="users"
+    :items="customers"
     :search="search"
     class="elevation-1"
   >
@@ -17,19 +17,18 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title><h3>Пользователи</h3></v-toolbar-title>
+        <v-toolbar-title><h3>Клиенты</h3></v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
-          vertical
-        ></v-divider>
+          vertical/>
         <v-text-field
                 v-model="search"
                 append-icon="mdi-magnify"
                 label="Поиск"
                 single-line
                 hide-details/>
-                <v-spacer></v-spacer>
+        <v-spacer/>
         <v-dialog
           v-model="dialog"
           max-width="500px"
@@ -57,56 +56,24 @@
                     <v-col cols="12">
                         <v-text-field
                         v-model="editedItem.name"
-                        label='ФИО'
+                        label='Название'
                         :rules="rules.required"/>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="12">
-                        <v-autocomplete
-                            v-model="editedItem.position"
-                            :items="positions"
-                            label="Должность"
-                            :rules="rules.required"/>
                     </v-col>
                 </v-row>
                 <v-row>
                     <v-col cols="12">
                         <v-text-field
                             v-model="editedItem.address"
-                            label="Адрес"
+                            label='Адрес'
                             :rules="rules.required"/>
-                            
                     </v-col>
                 </v-row>
                 <v-row>
                     <v-col cols="12">
                         <v-text-field
-                            :disabled="!adding"
-                            v-model="editedItem.email"
-                            label="E-mail"
-                            :rules="rules.email"/>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="8">
-                        <v-text-field
-                        v-model="editedItem.phone"
-                        label='Номер телефона'
-                        :rules="rules.phone"/>
-                    </v-col>
-                    <v-col cols="4">
-                        <v-text-field
-                        v-model="editedItem.working_hours"
-                        label='Кол-во раб. ч/мес.'/>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col cols="12" v-if="adding">
-                        <v-text-field
-                        :disabled="adding"
-                        v-model="editedItem.password"
-                        label='Пароль'/>
+                            v-model="editedItem.phone"
+                            label="Телефон"
+                            :rules="rules.phone"/>   
                     </v-col>
                 </v-row>
               </v-container>
@@ -133,7 +100,7 @@
         </v-dialog>
         <v-dialog v-model="dialogDelete" max-width="657px">
           <v-card>
-            <v-card-title class="headline">Вы уверены, что хотите удалить этого пользователя?</v-card-title>
+            <v-card-title class="headline">Вы действительно хотите удалить клиента?</v-card-title>
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="red darken-1" text @click="closeDelete">Отмена</v-btn>
@@ -165,7 +132,7 @@
         color="primary"
         @click="initialize"
       >
-        Reset
+        Повторить
       </v-btn>
     </template>
   </v-data-table>
@@ -183,23 +150,17 @@
         positions: ['Менеджер','Заведующий складом','Консультант'],
         dialogDelete: false,
         generatedPassword: '',
-        defaultUser: {
+        defaultCustomer: {
             uid: '',
             name: '',
-            position: '',
             phone: '',
-            email: '',
             address: '',
-            working_hours: 0,
         },
         editedItem: {
             uid: '',
             name: '',
-            position: '',
             phone: '+7',
-            email: '',
             address: '',
-            working_hours: 0,
         },
         search:'',
         rules: {
@@ -209,23 +170,20 @@
         },
         headers: [
           {
-            text: 'ФИО',
+            text: 'Название',
             align: 'start',
             value: 'name',
           },
-          { text: 'Должность', value: 'position' },
+          { text: 'Адрес', value: 'address' },
           { text: 'Телефон', value: 'phone', sortable:false },
-          { text: 'E-mail', value: 'email', sortable:false },
-          { text: 'Адрес', value: 'address', sortable:false },
-          { text: 'Кол-во раб. часов/мес', value: 'working_hours', align: 'center' },
           { text: 'Действие', value: 'actions', sortable: false, align: 'end' },
         ],
-        users: [],
+        customers: [],
       }
     },
     computed: {
       formTitle () {
-        return this.adding ? 'Создание пользователя' : 'Редактирование пользователя'
+        return this.adding ? 'Добавление клиента' : 'Редактирование клиента'
       }
     },
 
@@ -243,31 +201,28 @@
     },
     methods:{
         async initialize(){
-            this.users = await this.$store.dispatch('fetchUsers')
+            this.customers = await this.$store.dispatch('fetchCustomers')
             this.loading = false
         },
         async addingNewItem(){
             this.adding = true
-            await this.axios.get("https://helloacm.com/api/random/?n=8").then((response) =>this.generatedPassword = response.data);
-            this.editedItem.password = this.generatedPassword
-            
           },
         async editItem (item) {
-        this.editedIndex = this.users.indexOf(item)
+        this.editedIndex = this.customers.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialog = true
       },
 
 
       deleteItem (item) {
-        this.editedIndex = this.users.indexOf(item)
+        this.editedIndex = this.customers.indexOf(item)
         this.editedItem = Object.assign({}, item)
         this.dialogDelete = true
       },
 
       async deleteItemConfirm () {
-        this.users.splice(this.editedIndex, 1)
-        this.$store.dispatch('deleteUser',this.editedItem.uid)
+        this.customers.splice(this.editedIndex, 1)
+        this.$store.dispatch('deleteCustomer',this.editedItem.uid)
         this.closeDelete()
       },
 
@@ -294,11 +249,13 @@
         
         try{
           if (this.editedIndex > -1) {
-            Object.assign(this.users[this.editedIndex], this.editedItem)
-            await this.$store.dispatch('updateUser',this.editedItem)
+            console.log(this.editedItem);
+            Object.assign(this.customers[this.editedIndex], this.editedItem)
+            
+            await this.$store.dispatch('updateCustomer',this.editedItem)
           } else {
-            this.users.push(this.editedItem)
-            await this.$store.dispatch('register',this.editedItem)
+            this.customers.push(this.editedItem)
+            await this.$store.dispatch('addCustomer',this.editedItem)
           }
           this.close()
         }catch(e){
